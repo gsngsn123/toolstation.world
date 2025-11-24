@@ -1,14 +1,14 @@
 // ===== WORD COUNTER =====
 function initWordCounter() {
     const textarea = document.getElementById('wordCountText');
+    if (!textarea) return;
+
     const wordCount = document.getElementById('wordCount');
     const charCount = document.getElementById('charCount');
     const charNoSpaceCount = document.getElementById('charNoSpaceCount');
     const sentenceCount = document.getElementById('sentenceCount');
     const paragraphCount = document.getElementById('paragraphCount');
     const readingTime = document.getElementById('readingTime');
-
-    if (!textarea) return;
 
     function updateCounts() {
         const text = textarea.value;
@@ -39,47 +39,51 @@ function initWordCounter() {
 }
 
 // ===== TEXT CASE CONVERTER =====
-function initCaseConverter() {
+function convertCase(caseType) {
     const textarea = document.getElementById('caseText');
     if (!textarea) return;
+    
+    const text = textarea.value;
+    let result = text;
 
-    window.convertCase = function(caseType) {
-        const text = textarea.value;
-        let result = text;
+    switch(caseType) {
+        case 'upper':
+            result = text.toUpperCase();
+            break;
+        case 'lower':
+            result = text.toLowerCase();
+            break;
+        case 'title':
+            result = text.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+            break;
+        case 'sentence':
+            result = text.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, char => char.toUpperCase());
+            break;
+        case 'capitalize':
+            result = text.replace(/\b\w/g, char => char.toUpperCase());
+            break;
+        case 'alternate':
+            result = text.split('').map((char, i) => i % 2 === 0 ? char.toLowerCase() : char.toUpperCase()).join('');
+            break;
+    }
 
-        switch(caseType) {
-            case 'upper':
-                result = text.toUpperCase();
-                break;
-            case 'lower':
-                result = text.toLowerCase();
-                break;
-            case 'title':
-                result = text.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
-                break;
-            case 'sentence':
-                result = text.toLowerCase().replace(/(^\s*\w|[.!?]\s*\w)/g, char => char.toUpperCase());
-                break;
-            case 'capitalize':
-                result = text.replace(/\b\w/g, char => char.toUpperCase());
-                break;
-            case 'alternate':
-                result = text.split('').map((char, i) => i % 2 === 0 ? char.toLowerCase() : char.toUpperCase()).join('');
-                break;
-        }
+    textarea.value = result;
+}
 
-        textarea.value = result;
-    };
+function copyText() {
+    const textarea = document.getElementById('caseText');
+    if (!textarea) return;
+    
+    textarea.select();
+    document.execCommand('copy');
+    alert('Text copied to clipboard!');
+}
 
-    window.copyText = function() {
-        textarea.select();
-        document.execCommand('copy');
-        alert('Text copied to clipboard!');
-    };
-
-    window.clearText = function() {
-        textarea.value = '';
-    };
+function clearText() {
+    const textarea = document.getElementById('caseText');
+    if (!textarea) return;
+    
+    textarea.value = '';
 }
 
 // ===== QR CODE GENERATOR =====
@@ -87,6 +91,7 @@ function initQRGenerator() {
     const input = document.getElementById('qrText');
     const generateBtn = document.getElementById('generateQR');
     const qrcodeDiv = document.getElementById('qrcode');
+    const sizeSelect = document.getElementById('qrSize');
     
     if (!input || !generateBtn) return;
 
@@ -97,31 +102,40 @@ function initQRGenerator() {
             return;
         }
 
+        const size = parseInt(sizeSelect.value) || 300;
         qrcodeDiv.innerHTML = '';
         
-        // Create QR code using a simple library-free approach
-        // For production, you'd use a library like qrcode.js
-        // Here's a simple implementation using Google Charts API as fallback
-        const qrSize = 300;
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${qrSize}x${qrSize}&data=${encodeURIComponent(text)}`;
-        
-        const img = document.createElement('img');
-        img.src = qrUrl;
-        img.alt = 'QR Code';
-        img.style.maxWidth = '100%';
-        qrcodeDiv.appendChild(img);
+        try {
+            // Use local QRCode library
+            const qr = new QRCode(qrcodeDiv, {
+                text: text,
+                width: size,
+                height: size,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.M
+            });
 
-        // Add download button
-        const downloadBtn = document.createElement('button');
-        downloadBtn.textContent = 'Download QR Code';
-        downloadBtn.className = 'btn mt-1';
-        downloadBtn.onclick = function() {
-            const link = document.createElement('a');
-            link.href = qrUrl;
-            link.download = 'qrcode.png';
-            link.click();
-        };
-        qrcodeDiv.appendChild(downloadBtn);
+            // Add download button after generation
+            setTimeout(() => {
+                const canvas = qrcodeDiv.querySelector('canvas');
+                if (canvas) {
+                    const downloadBtn = document.createElement('button');
+                    downloadBtn.textContent = 'Download QR Code';
+                    downloadBtn.className = 'btn mt-1';
+                    downloadBtn.onclick = function() {
+                        const link = document.createElement('a');
+                        link.href = canvas.toDataURL();
+                        link.download = 'qrcode.png';
+                        link.click();
+                    };
+                    qrcodeDiv.appendChild(downloadBtn);
+                }
+            }, 100);
+        } catch (error) {
+            console.error('QR Code generation error:', error);
+            qrcodeDiv.innerHTML = '<p style="color: red;">Error generating QR code. Please try again.</p>';
+        }
     });
 }
 
@@ -141,54 +155,82 @@ function initImageCompressor() {
 
     let compressedBlob = null;
 
-    qualitySlider?.addEventListener('input', function() {
-        qualityValue.textContent = this.value + '%';
-    });
+    if (qualitySlider) {
+        qualitySlider.addEventListener('input', function() {
+            if (qualityValue) qualityValue.textContent = this.value + '%';
+        });
+    }
 
-    compressBtn?.addEventListener('click', function() {
-        const file = fileInput.files[0];
-        if (!file) {
-            alert('Please select an image first');
-            return;
-        }
+    if (compressBtn) {
+        compressBtn.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select an image first');
+                return;
+            }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                // Show original
-                originalPreview.src = e.target.result;
-                originalSize.textContent = (file.size / 1024).toFixed(2) + ' KB';
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                return;
+            }
 
-                // Compress
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    // Show original
+                    if (originalPreview) {
+                        originalPreview.src = e.target.result;
+                        originalPreview.style.display = 'block';
+                    }
+                    if (originalSize) {
+                        originalSize.textContent = (file.size / 1024).toFixed(2) + ' KB';
+                    }
 
-                const quality = qualitySlider.value / 100;
-                canvas.toBlob(function(blob) {
-                    compressedBlob = blob;
-                    const url = URL.createObjectURL(blob);
-                    compressedPreview.src = url;
-                    compressedSize.textContent = (blob.size / 1024).toFixed(2) + ' KB';
-                    downloadBtn.classList.remove('hidden');
-                }, 'image/jpeg', quality);
+                    // Compress
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    const quality = qualitySlider ? qualitySlider.value / 100 : 0.8;
+                    canvas.toBlob(function(blob) {
+                        compressedBlob = blob;
+                        const url = URL.createObjectURL(blob);
+                        if (compressedPreview) {
+                            compressedPreview.src = url;
+                            compressedPreview.style.display = 'block';
+                        }
+                        if (compressedSize) {
+                            compressedSize.textContent = (blob.size / 1024).toFixed(2) + ' KB';
+                        }
+                        if (downloadBtn) {
+                            downloadBtn.style.display = 'block';
+                        }
+                        // Show result box
+                        const resultBox = document.getElementById('resultBox');
+                        if (resultBox) {
+                            resultBox.style.display = 'block';
+                        }
+                    }, 'image/jpeg', quality);
+                };
+                img.src = e.target.result;
             };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
+            reader.readAsDataURL(file);
+        });
+    }
 
-    downloadBtn?.addEventListener('click', function() {
-        if (!compressedBlob) return;
-        const url = URL.createObjectURL(compressedBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'compressed-image.jpg';
-        link.click();
-    });
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            if (!compressedBlob) return;
+            const url = URL.createObjectURL(compressedBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'compressed-image.jpg';
+            link.click();
+        });
+    }
 }
 
 // ===== JPG <-> PNG CONVERTER =====
@@ -203,52 +245,66 @@ function initImageConverter() {
 
     let convertedBlob = null;
 
-    convertBtn?.addEventListener('click', function() {
-        const file = fileInput.files[0];
-        if (!file) {
-            alert('Please select an image first');
-            return;
-        }
+    if (convertBtn) {
+        convertBtn.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select an image first');
+                return;
+            }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                
-                // For PNG, fill with white background
-                if (formatSelect.value === 'png') {
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                }
-                
-                ctx.drawImage(img, 0, 0);
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                return;
+            }
 
-                const mimeType = formatSelect.value === 'png' ? 'image/png' : 'image/jpeg';
-                canvas.toBlob(function(blob) {
-                    convertedBlob = blob;
-                    const url = URL.createObjectURL(blob);
-                    previewImg.src = url;
-                    previewImg.parentElement.classList.remove('hidden');
-                    downloadBtn.classList.remove('hidden');
-                }, mimeType, 0.95);
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // For PNG, fill with white background
+                    if (formatSelect && formatSelect.value === 'png') {
+                        ctx.fillStyle = 'white';
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }
+                    
+                    ctx.drawImage(img, 0, 0);
+
+                    const mimeType = formatSelect && formatSelect.value === 'png' ? 'image/png' : 'image/jpeg';
+                    canvas.toBlob(function(blob) {
+                        convertedBlob = blob;
+                        const url = URL.createObjectURL(blob);
+                        if (previewImg) {
+                            previewImg.src = url;
+                            previewImg.style.display = 'block';
+                        }
+                        if (downloadBtn) {
+                            downloadBtn.style.display = 'block';
+                        }
+                    }, mimeType, 0.95);
+                };
+                img.src = e.target.result;
             };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
+            reader.readAsDataURL(file);
+        });
+    }
 
-    downloadBtn?.addEventListener('click', function() {
-        if (!convertedBlob) return;
-        const url = URL.createObjectURL(convertedBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `converted-image.${formatSelect.value}`;
-        link.click();
-    });
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            if (!convertedBlob) return;
+            const url = URL.createObjectURL(convertedBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            const extension = formatSelect ? formatSelect.value : 'jpg';
+            link.download = `converted-image.${extension}`;
+            link.click();
+        });
+    }
 }
 
 // ===== IMAGE TO PDF =====
@@ -256,67 +312,83 @@ function initImageToPDF() {
     const fileInput = document.getElementById('pdfImageInput');
     const convertBtn = document.getElementById('convertToPDF');
     const previewImg = document.getElementById('pdfPreviewImg');
+    const downloadBtn = document.getElementById('downloadPDF');
 
     if (!fileInput) return;
 
-    convertBtn?.addEventListener('click', function() {
-        const file = fileInput.files[0];
-        if (!file) {
-            alert('Please select an image first');
-            return;
-        }
+    let pdfBlob = null;
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const img = new Image();
-            img.onload = function() {
-                previewImg.src = e.target.result;
-                previewImg.parentElement.classList.remove('hidden');
+    if (convertBtn) {
+        convertBtn.addEventListener('click', function() {
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('Please select an image first');
+                return;
+            }
 
-                // Create PDF using jsPDF library alternative - simple canvas approach
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
-                
-                // A4 size ratio
-                const a4Width = 595;
-                const a4Height = 842;
-                const imgRatio = img.width / img.height;
-                const a4Ratio = a4Width / a4Height;
-                
-                let canvasWidth, canvasHeight;
-                if (imgRatio > a4Ratio) {
-                    canvasWidth = a4Width;
-                    canvasHeight = a4Width / imgRatio;
-                } else {
-                    canvasHeight = a4Height;
-                    canvasWidth = a4Height * imgRatio;
-                }
-                
-                canvas.width = canvasWidth;
-                canvas.height = canvasHeight;
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+            if (!file.type.startsWith('image/')) {
+                alert('Please select a valid image file');
+                return;
+            }
 
-                // Convert to blob and download
-                canvas.toBlob(function(blob) {
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = 'image-to-pdf.png'; // Simplified - would need jsPDF for real PDF
-                    link.textContent = 'Download PDF (as image)';
-                    link.className = 'btn mt-1';
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    if (previewImg) {
+                        previewImg.src = e.target.result;
+                        previewImg.style.display = 'block';
+                    }
+
+                    // Create PDF-sized canvas (A4 proportions)
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
                     
-                    const downloadDiv = document.getElementById('pdfDownload');
-                    downloadDiv.innerHTML = '';
-                    downloadDiv.appendChild(link);
-                    downloadDiv.classList.remove('hidden');
-                }, 'image/png');
+                    // A4 size ratio (210mm x 297mm)
+                    const a4Width = 595;
+                    const a4Height = 842;
+                    const imgRatio = img.width / img.height;
+                    const a4Ratio = a4Width / a4Height;
+                    
+                    let canvasWidth, canvasHeight;
+                    if (imgRatio > a4Ratio) {
+                        canvasWidth = a4Width;
+                        canvasHeight = a4Width / imgRatio;
+                    } else {
+                        canvasHeight = a4Height;
+                        canvasWidth = a4Height * imgRatio;
+                    }
+                    
+                    canvas.width = canvasWidth;
+                    canvas.height = canvasHeight;
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvasWidth, canvasHeight);
+
+                    // Convert to blob
+                    canvas.toBlob(function(blob) {
+                        pdfBlob = blob;
+                        if (downloadBtn) {
+                            downloadBtn.style.display = 'block';
+                        }
+                    }, 'image/png');
+                };
+                img.src = e.target.result;
             };
-            img.src = e.target.result;
-        };
-        reader.readAsDataURL(file);
-    });
+            reader.readAsDataURL(file);
+        });
+    }
+
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', function() {
+            if (!pdfBlob) return;
+            const url = URL.createObjectURL(pdfBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'image-to-pdf.png';
+            link.click();
+        });
+    }
 }
 
 // ===== BMI CALCULATOR =====
@@ -329,8 +401,8 @@ function initBMICalculator() {
         const height = parseFloat(document.getElementById('height').value);
         const unit = document.getElementById('unit').value;
 
-        if (!weight || !height) {
-            alert('Please enter both weight and height');
+        if (!weight || !height || weight <= 0 || height <= 0) {
+            alert('Please enter valid weight and height values');
             return;
         }
 
@@ -359,20 +431,22 @@ function initBMICalculator() {
         }
 
         const resultDiv = document.getElementById('bmiResult');
-        resultDiv.innerHTML = `
-            <h3>Your Results</h3>
-            <div class="stat-item" style="margin-top: 1rem;">
-                <div class="stat-value" style="color: ${color}">${bmi.toFixed(1)}</div>
-                <div class="stat-label">BMI</div>
-            </div>
-            <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-light); border-radius: 8px;">
-                <p style="font-weight: 600; color: ${color}; font-size: 1.25rem;">${category}</p>
-                <p style="margin-top: 0.5rem; color: var(--text-light);">
-                    ${getBMIAdvice(category)}
-                </p>
-            </div>
-        `;
-        resultDiv.classList.remove('hidden');
+        if (resultDiv) {
+            resultDiv.innerHTML = `
+                <h3>Your Results</h3>
+                <div class="stat-item" style="margin-top: 1rem;">
+                    <div class="stat-value" style="color: ${color}">${bmi.toFixed(1)}</div>
+                    <div class="stat-label">BMI</div>
+                </div>
+                <div style="margin-top: 1rem; padding: 1rem; background: var(--bg-light); border-radius: 8px;">
+                    <p style="font-weight: 600; color: ${color}; font-size: 1.25rem;">${category}</p>
+                    <p style="margin-top: 0.5rem; color: var(--text-light);">
+                        ${getBMIAdvice(category)}
+                    </p>
+                </div>
+            `;
+            resultDiv.style.display = 'block';
+        }
     });
 
     function getBMIAdvice(category) {
@@ -396,8 +470,8 @@ function initEMICalculator() {
         const rate = parseFloat(document.getElementById('rate').value);
         const tenure = parseFloat(document.getElementById('tenure').value);
 
-        if (!principal || !rate || !tenure) {
-            alert('Please enter all values');
+        if (!principal || !rate || !tenure || principal <= 0 || rate <= 0 || tenure <= 0) {
+            alert('Please enter valid values for all fields');
             return;
         }
 
@@ -412,28 +486,30 @@ function initEMICalculator() {
         const totalInterest = totalAmount - principal;
 
         const resultDiv = document.getElementById('emiResult');
-        resultDiv.innerHTML = `
-            <h3>Your EMI Breakdown</h3>
-            <div class="stats" style="margin-top: 1rem;">
-                <div class="stat-item">
-                    <div class="stat-value">$${emi.toFixed(2)}</div>
-                    <div class="stat-label">Monthly EMI</div>
+        if (resultDiv) {
+            resultDiv.innerHTML = `
+                <h3>Your EMI Breakdown</h3>
+                <div class="stats" style="margin-top: 1rem;">
+                    <div class="stat-item">
+                        <div class="stat-value">$${emi.toFixed(2)}</div>
+                        <div class="stat-label">Monthly EMI</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">$${principal.toFixed(2)}</div>
+                        <div class="stat-label">Principal Amount</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">$${totalInterest.toFixed(2)}</div>
+                        <div class="stat-label">Total Interest</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">$${totalAmount.toFixed(2)}</div>
+                        <div class="stat-label">Total Amount</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value">$${principal.toFixed(2)}</div>
-                    <div class="stat-label">Principal Amount</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">$${totalInterest.toFixed(2)}</div>
-                    <div class="stat-label">Total Interest</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value">$${totalAmount.toFixed(2)}</div>
-                    <div class="stat-label">Total Amount</div>
-                </div>
-            </div>
-        `;
-        resultDiv.classList.remove('hidden');
+            `;
+            resultDiv.style.display = 'block';
+        }
     });
 }
 
@@ -468,7 +544,7 @@ function initYouTubeThumbnail() {
         }
 
         if (!videoId) {
-            alert('Invalid YouTube URL');
+            alert('Invalid YouTube URL. Please enter a valid YouTube video URL.');
             return;
         }
 
@@ -485,130 +561,23 @@ function initYouTubeThumbnail() {
             html += `
                 <div style="margin-top: 1.5rem;">
                     <h4 style="margin-bottom: 0.5rem;">${thumb.name}</h4>
-                    <img src="${thumb.url}" alt="${thumb.name}" style="max-width: 100%; border-radius: 8px; box-shadow: var(--card-shadow);">
+                    <img src="${thumb.url}" alt="${thumb.name}" style="max-width: 100%; border-radius: 8px; box-shadow: var(--card-shadow);" onerror="this.style.display='none';">
+                    <br>
                     <a href="${thumb.url}" download="youtube-thumbnail-${thumb.name.toLowerCase().replace(/\s/g, '-')}.jpg" class="btn" style="display: inline-block; margin-top: 0.5rem;">Download</a>
                 </div>
             `;
         });
 
-        resultDiv.innerHTML = html;
-        resultDiv.classList.remove('hidden');
-    });
-}
-
-// ===== SEO AND PERFORMANCE OPTIMIZATIONS =====
-
-// Lazy load images for better performance
-function initLazyLoading() {
-    const images = document.querySelectorAll('img[data-src]');
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const img = entry.target;
-                img.src = img.dataset.src;
-                img.classList.remove('lazy');
-                imageObserver.unobserve(img);
-            }
-        });
-    });
-    
-    images.forEach(img => imageObserver.observe(img));
-}
-
-// Track user interactions for analytics
-function initAnalytics() {
-    // Track tool usage
-    document.addEventListener('click', function(e) {
-        if (e.target.matches('.tool-card, .tool-card *')) {
-            const toolCard = e.target.closest('.tool-card');
-            if (toolCard) {
-                const toolName = toolCard.querySelector('h3')?.textContent || 'Unknown Tool';
-                // Send to analytics (replace with your analytics code)
-                console.log('Tool clicked:', toolName);
-            }
-        }
-    });
-    
-    // Track button clicks
-    document.addEventListener('click', function(e) {
-        if (e.target.matches('.btn')) {
-            const buttonText = e.target.textContent || 'Unknown Button';
-            console.log('Button clicked:', buttonText);
+        if (resultDiv) {
+            resultDiv.innerHTML = html;
+            resultDiv.style.display = 'block';
         }
     });
 }
 
-// Optimize Core Web Vitals
-function initCoreWebVitals() {
-    // Preload critical resources
-    const criticalResources = [
-        '/assets/style.css',
-        '/assets/main.js'
-    ];
-    
-    criticalResources.forEach(resource => {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.href = resource;
-        link.as = resource.endsWith('.css') ? 'style' : 'script';
-        document.head.appendChild(link);
-    });
-    
-    // Optimize layout shifts
-    const images = document.querySelectorAll('img:not([width]):not([height])');
-    images.forEach(img => {
-        img.addEventListener('load', function() {
-            if (!this.width || !this.height) {
-                this.style.aspectRatio = `${this.naturalWidth} / ${this.naturalHeight}`;
-            }
-        });
-    });
-}
-
-// Service Worker for offline functionality
-function initServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-                console.log('SW registered:', registration);
-            })
-            .catch(error => {
-                console.log('SW registration failed:', error);
-            });
-    }
-}
-
-// Initialize AdSense ads
-function initAdSense() {
-    // Initialize AdSense ads after page load
-    if (typeof adsbygoogle !== 'undefined') {
-        const ads = document.querySelectorAll('.adsbygoogle');
-        ads.forEach(ad => {
-            if (!ad.dataset.adsbygoogleStatus) {
-                (adsbygoogle = window.adsbygoogle || []).push({});
-            }
-        });
-    }
-}
-
-// Error tracking and reporting
-function initErrorTracking() {
-    window.addEventListener('error', function(e) {
-        console.error('JavaScript error:', e.error);
-        // Send to error tracking service
-    });
-    
-    window.addEventListener('unhandledrejection', function(e) {
-        console.error('Unhandled promise rejection:', e.reason);
-        // Send to error tracking service
-    });
-}
-
-// Initialize appropriate function based on page
+// Initialize all tools when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Tool initializations
     initWordCounter();
-    initCaseConverter();
     initQRGenerator();
     initImageCompressor();
     initImageConverter();
@@ -616,20 +585,4 @@ document.addEventListener('DOMContentLoaded', function() {
     initBMICalculator();
     initEMICalculator();
     initYouTubeThumbnail();
-    
-    // SEO and performance optimizations
-    initLazyLoading();
-    initAnalytics();
-    initCoreWebVitals();
-    initErrorTracking();
-    
-    // Initialize AdSense after a short delay
-    setTimeout(initAdSense, 1000);
 });
-
-// Initialize service worker
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initServiceWorker);
-} else {
-    initServiceWorker();
-}
