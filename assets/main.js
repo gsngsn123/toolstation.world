@@ -496,8 +496,117 @@ function initYouTubeThumbnail() {
     });
 }
 
+// ===== SEO AND PERFORMANCE OPTIMIZATIONS =====
+
+// Lazy load images for better performance
+function initLazyLoading() {
+    const images = document.querySelectorAll('img[data-src]');
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.classList.remove('lazy');
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+    
+    images.forEach(img => imageObserver.observe(img));
+}
+
+// Track user interactions for analytics
+function initAnalytics() {
+    // Track tool usage
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.tool-card, .tool-card *')) {
+            const toolCard = e.target.closest('.tool-card');
+            if (toolCard) {
+                const toolName = toolCard.querySelector('h3')?.textContent || 'Unknown Tool';
+                // Send to analytics (replace with your analytics code)
+                console.log('Tool clicked:', toolName);
+            }
+        }
+    });
+    
+    // Track button clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.btn')) {
+            const buttonText = e.target.textContent || 'Unknown Button';
+            console.log('Button clicked:', buttonText);
+        }
+    });
+}
+
+// Optimize Core Web Vitals
+function initCoreWebVitals() {
+    // Preload critical resources
+    const criticalResources = [
+        '/assets/style.css',
+        '/assets/main.js'
+    ];
+    
+    criticalResources.forEach(resource => {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.href = resource;
+        link.as = resource.endsWith('.css') ? 'style' : 'script';
+        document.head.appendChild(link);
+    });
+    
+    // Optimize layout shifts
+    const images = document.querySelectorAll('img:not([width]):not([height])');
+    images.forEach(img => {
+        img.addEventListener('load', function() {
+            if (!this.width || !this.height) {
+                this.style.aspectRatio = `${this.naturalWidth} / ${this.naturalHeight}`;
+            }
+        });
+    });
+}
+
+// Service Worker for offline functionality
+function initServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+            .then(registration => {
+                console.log('SW registered:', registration);
+            })
+            .catch(error => {
+                console.log('SW registration failed:', error);
+            });
+    }
+}
+
+// Initialize AdSense ads
+function initAdSense() {
+    // Initialize AdSense ads after page load
+    if (typeof adsbygoogle !== 'undefined') {
+        const ads = document.querySelectorAll('.adsbygoogle');
+        ads.forEach(ad => {
+            if (!ad.dataset.adsbygoogleStatus) {
+                (adsbygoogle = window.adsbygoogle || []).push({});
+            }
+        });
+    }
+}
+
+// Error tracking and reporting
+function initErrorTracking() {
+    window.addEventListener('error', function(e) {
+        console.error('JavaScript error:', e.error);
+        // Send to error tracking service
+    });
+    
+    window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled promise rejection:', e.reason);
+        // Send to error tracking service
+    });
+}
+
 // Initialize appropriate function based on page
 document.addEventListener('DOMContentLoaded', function() {
+    // Tool initializations
     initWordCounter();
     initCaseConverter();
     initQRGenerator();
@@ -507,4 +616,20 @@ document.addEventListener('DOMContentLoaded', function() {
     initBMICalculator();
     initEMICalculator();
     initYouTubeThumbnail();
+    
+    // SEO and performance optimizations
+    initLazyLoading();
+    initAnalytics();
+    initCoreWebVitals();
+    initErrorTracking();
+    
+    // Initialize AdSense after a short delay
+    setTimeout(initAdSense, 1000);
 });
+
+// Initialize service worker
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initServiceWorker);
+} else {
+    initServiceWorker();
+}
