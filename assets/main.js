@@ -14,24 +14,24 @@ function initWordCounter() {
         const text = textarea.value;
         
         // Words
-        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
-        wordCount.textContent = words.length;
+        const words = text.trim() === '' ? [] : text.trim().split(/\s+/).filter(word => word.length > 0);
+        if (wordCount) wordCount.textContent = words.length;
         
         // Characters
-        charCount.textContent = text.length;
-        charNoSpaceCount.textContent = text.replace(/\s/g, '').length;
+        if (charCount) charCount.textContent = text.length;
+        if (charNoSpaceCount) charNoSpaceCount.textContent = text.replace(/\s/g, '').length;
         
         // Sentences
-        const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-        sentenceCount.textContent = sentences.length;
+        const sentences = text.trim() === '' ? [] : text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+        if (sentenceCount) sentenceCount.textContent = sentences.length;
         
         // Paragraphs
-        const paragraphs = text.split(/\n+/).filter(p => p.trim().length > 0);
-        paragraphCount.textContent = paragraphs.length;
+        const paragraphs = text.trim() === '' ? [] : text.split(/\n+/).filter(p => p.trim().length > 0);
+        if (paragraphCount) paragraphCount.textContent = paragraphs.length;
         
         // Reading time (average 200 words per minute)
-        const minutes = Math.ceil(words.length / 200);
-        readingTime.textContent = minutes;
+        const minutes = words.length === 0 ? 0 : Math.ceil(words.length / 200);
+        if (readingTime) readingTime.textContent = minutes;
     }
 
     textarea.addEventListener('input', updateCounts);
@@ -93,7 +93,7 @@ function initQRGenerator() {
     const qrcodeDiv = document.getElementById('qrcode');
     const sizeSelect = document.getElementById('qrSize');
     
-    if (!input || !generateBtn) return;
+    if (!input || !generateBtn || !qrcodeDiv) return;
 
     generateBtn.addEventListener('click', function() {
         const text = input.value.trim();
@@ -102,36 +102,60 @@ function initQRGenerator() {
             return;
         }
 
-        const size = parseInt(sizeSelect.value) || 300;
+        const size = sizeSelect ? parseInt(sizeSelect.value) || 300 : 300;
         qrcodeDiv.innerHTML = '';
         
         try {
-            // Use local QRCode library
-            const qr = new QRCode(qrcodeDiv, {
-                text: text,
-                width: size,
-                height: size,
-                colorDark: "#000000",
-                colorLight: "#ffffff",
-                correctLevel: QRCode.CorrectLevel.M
-            });
+            // Check if QRCode library is available
+            if (typeof QRCode !== 'undefined') {
+                const qr = new QRCode(qrcodeDiv, {
+                    text: text,
+                    width: size,
+                    height: size,
+                    colorDark: "#000000",
+                    colorLight: "#ffffff",
+                    correctLevel: QRCode.CorrectLevel.M
+                });
 
-            // Add download button after generation
-            setTimeout(() => {
-                const canvas = qrcodeDiv.querySelector('canvas');
-                if (canvas) {
-                    const downloadBtn = document.createElement('button');
-                    downloadBtn.textContent = 'Download QR Code';
-                    downloadBtn.className = 'btn mt-1';
-                    downloadBtn.onclick = function() {
-                        const link = document.createElement('a');
-                        link.href = canvas.toDataURL();
-                        link.download = 'qrcode.png';
-                        link.click();
-                    };
-                    qrcodeDiv.appendChild(downloadBtn);
-                }
-            }, 100);
+                // Add download button after generation
+                setTimeout(() => {
+                    const canvas = qrcodeDiv.querySelector('canvas');
+                    if (canvas) {
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.textContent = 'Download QR Code';
+                        downloadBtn.className = 'btn mt-1';
+                        downloadBtn.style.marginTop = '1rem';
+                        downloadBtn.onclick = function() {
+                            const link = document.createElement('a');
+                            link.href = canvas.toDataURL();
+                            link.download = 'qrcode.png';
+                            link.click();
+                        };
+                        qrcodeDiv.appendChild(downloadBtn);
+                    }
+                }, 100);
+            } else {
+                // Fallback to Google Charts API if local library fails
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(text)}`;
+                const img = document.createElement('img');
+                img.src = qrUrl;
+                img.alt = 'QR Code';
+                img.style.maxWidth = '100%';
+                img.style.borderRadius = '8px';
+                qrcodeDiv.appendChild(img);
+                
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download QR Code';
+                downloadBtn.className = 'btn mt-1';
+                downloadBtn.style.marginTop = '1rem';
+                downloadBtn.onclick = function() {
+                    const link = document.createElement('a');
+                    link.href = qrUrl;
+                    link.download = 'qrcode.png';
+                    link.click();
+                };
+                qrcodeDiv.appendChild(downloadBtn);
+            }
         } catch (error) {
             console.error('QR Code generation error:', error);
             qrcodeDiv.innerHTML = '<p style="color: red;">Error generating QR code. Please try again.</p>';
@@ -577,6 +601,7 @@ function initYouTubeThumbnail() {
 
 // Initialize all tools when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all tools
     initWordCounter();
     initQRGenerator();
     initImageCompressor();
@@ -585,4 +610,37 @@ document.addEventListener('DOMContentLoaded', function() {
     initBMICalculator();
     initEMICalculator();
     initYouTubeThumbnail();
+    
+    // Add mobile-friendly touch events
+    const buttons = document.querySelectorAll('.btn');
+    buttons.forEach(btn => {
+        btn.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.95)';
+        });
+        btn.addEventListener('touchend', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+    
+    // Improve mobile textarea experience
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('focus', function() {
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 300);
+            }
+        });
+    });
 });
+
+// Add error handling for missing elements
+window.addEventListener('error', function(e) {
+    console.error('JavaScript error:', e.error);
+});
+
+// Ensure all functions are available globally
+window.convertCase = convertCase;
+window.copyText = copyText;
+window.clearText = clearText;
