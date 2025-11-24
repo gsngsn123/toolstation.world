@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Free loan EMI calculator. Calculate monthly loan EMI with detailed breakdown of principal, interest, and total payment.">
+    <meta name="keywords" content="EMI calculator, loan calculator, monthly payment calculator, loan EMI, mortgage calculator">
+    <title>Loan EMI Calculator - Calculate Monthly Loan Payment | ToolStation.world</title>
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">🛠️ <a href="/" style="color: inherit; text-decoration: none;">ToolStation</a></h1>
+                <nav>
+                    <a href="/">Home</a>
+                    <a href="/about.html">About</a>
+                    <a href="/contact.html">Contact</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="tool-container">
+        <div class="tool-header">
+            <h1>💰 Loan EMI Calculator</h1>
+            <p>Calculate monthly loan EMI with detailed breakdown</p>
+        </div>
+
+        <div class="ad"></div>
+
+        <div class="tool-content">
+            <div class="form-group">
+                <label for="principal">Loan Amount ($):</label>
+                <input type="number" id="principal" placeholder="Enter loan amount" step="100">
+            </div>
+
+            <div class="form-group">
+                <label for="rate">Annual Interest Rate (%):</label>
+                <input type="number" id="rate" placeholder="Enter interest rate" step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label for="tenure">Loan Tenure (years):</label>
+                <input type="number" id="tenure" placeholder="Enter loan tenure in years" step="0.5">
+            </div>
+
+            <button class="btn" id="calculateEMI">Calculate EMI</button>
+
+            <div class="result-box hidden" id="emiResult"></div>
+        </div>
+
+        <div class="faq-section">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-item">
+                <h3>What is EMI?</h3>
+                <p>EMI stands for Equated Monthly Installment. It's the fixed amount you pay every month to repay your loan, which includes both principal and interest components.</p>
+            </div>
+            <div class="faq-item">
+                <h3>How is EMI calculated?</h3>
+                <p>EMI is calculated using the formula: EMI = [P × R × (1+R)^N] / [(1+R)^N-1], where P is principal, R is monthly interest rate, and N is tenure in months.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Can I pay more than the EMI amount?</h3>
+                <p>Yes, most loans allow prepayment. Paying more than the EMI reduces your principal faster, saving you interest and shortening your loan tenure.</p>
+            </div>
+            <div class="faq-item">
+                <h3>How does interest rate affect my EMI?</h3>
+                <p>Higher interest rates result in higher EMIs and more total interest paid. Even a small difference in interest rate can significantly impact your total loan cost over time.</p>
+            </div>
+            <div class="faq-item">
+                <h3>What's better - shorter or longer loan tenure?</h3>
+                <p>Shorter tenure means higher EMI but less total interest paid. Longer tenure means lower EMI but more total interest. Choose based on your monthly budget and financial goals.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>ToolStation.world</h4>
+                    <p>Your go-to destination for free online tools.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/about.html">About</a></li>
+                        <li><a href="/contact.html">Contact</a></li>
+                        <li><a href="/privacy.html">Privacy Policy</a></li>
+                        <li><a href="/terms.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ToolStation.world. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/assets/main.js"></script>
+</body>
+</html>

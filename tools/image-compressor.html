@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Free online image compressor. Reduce image file size while maintaining quality. Compress JPG, PNG, and other formats instantly.">
+    <meta name="keywords" content="image compressor, compress image, reduce image size, image optimizer, shrink image">
+    <title>Image Compressor - Reduce Image Size Online | ToolStation.world</title>
+    <link rel="stylesheet" href="/assets/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo">🛠️ <a href="/" style="color: inherit; text-decoration: none;">ToolStation</a></h1>
+                <nav>
+                    <a href="/">Home</a>
+                    <a href="/about.html">About</a>
+                    <a href="/contact.html">Contact</a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="tool-container">
+        <div class="tool-header">
+            <h1>🗜️ Image Compressor</h1>
+            <p>Reduce image file size while maintaining quality</p>
+        </div>
+
+        <div class="ad"></div>
+
+        <div class="tool-content">
+            <div class="form-group">
+                <label for="imageInput">Select image:</label>
+                <input type="file" id="imageInput" accept="image/*">
+            </div>
+
+            <div class="form-group">
+                <label for="quality">Compression Quality: <span id="qualityValue">80%</span></label>
+                <input type="range" id="quality" min="1" max="100" value="80" style="width: 100%;">
+            </div>
+
+            <button class="btn" id="compressBtn">Compress Image</button>
+
+            <div class="result-box mt-2">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                    <div>
+                        <h4>Original</h4>
+                        <div class="image-preview">
+                            <img id="originalPreview" alt="Original" style="max-width: 100%; display: none;">
+                        </div>
+                        <p class="mt-1">Size: <span id="originalSize">-</span></p>
+                    </div>
+                    <div>
+                        <h4>Compressed</h4>
+                        <div class="image-preview">
+                            <img id="compressedPreview" alt="Compressed" style="max-width: 100%; display: none;">
+                        </div>
+                        <p class="mt-1">Size: <span id="compressedSize">-</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn hidden" id="downloadCompressed">Download Compressed Image</button>
+        </div>
+
+        <div class="faq-section">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-item">
+                <h3>How much can I compress my images?</h3>
+                <p>Compression depends on the original image and quality setting. Typically, you can reduce file size by 50-80% with minimal visible quality loss at 80% quality setting.</p>
+            </div>
+            <div class="faq-item">
+                <h3>What image formats are supported?</h3>
+                <p>This tool supports all common image formats including JPG, PNG, WebP, and others. The output is always in JPG format for maximum compatibility.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Will compression affect image quality?</h3>
+                <p>Some quality loss is inevitable with compression, but at 80% quality, most people can't notice the difference. You can adjust the quality slider to find the perfect balance.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Is my image uploaded to your servers?</h3>
+                <p>No! All compression happens in your browser using HTML5 Canvas. Your images never leave your device, ensuring complete privacy.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Can I compress multiple images at once?</h3>
+                <p>Currently, you can compress one image at a time. Simply repeat the process for each image you want to compress.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>ToolStation.world</h4>
+                    <p>Your go-to destination for free online tools.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/about.html">About</a></li>
+                        <li><a href="/contact.html">Contact</a></li>
+                        <li><a href="/privacy.html">Privacy Policy</a></li>
+                        <li><a href="/terms.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 ToolStation.world. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/assets/main.js"></script>
+</body>
+</html>
